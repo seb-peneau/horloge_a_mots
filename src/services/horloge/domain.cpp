@@ -22,7 +22,7 @@ void Domain::setup() {
   
   String ssid = storage->read(SSIDSTORAGE);
   String password = storage->read(PASSSTORAGE);
-  if (ssid = "" && password != "") {
+  if (ssid != "" && password != "") {
     displayWifiAnimation = true;
     counter = millis() / 1000;
     counter += 60;
@@ -44,11 +44,11 @@ void Domain::loop() {
       debug->debug("Domain::create Access point");
       network->disconnect();
       displayWifiAnimation = false;
-      //display->clearDisplay();
+      display->clearDisplay();
       bool result = network->createAccessPoint(APSSID, APPWD);
       if (result == true) { // Create Webserver
         debug->debug("Domain::create Web Server");
-        //display->displayConfigurationMode(true);
+        display->displayConfigurationMode(true);
         webServer->startWebServer(80);
         webServer->on("/", "GET", [&, this](){
           debug->debug("Domain::on GET /");
@@ -60,7 +60,7 @@ void Domain::loop() {
         });
       }
     } else if (storage->read(SSIDSTORAGE) != "") {
-      //display->clearDisplay();
+      display->clearDisplay();
       int seconds = (millis() / 1000);
       int remaining = counter - seconds;
       float fr = ((remaining * 100) / 60) ;
@@ -76,12 +76,12 @@ void Domain::loop() {
     }
   } else { // Network is up and running
     if (network->isApCreated()) { // close AccessPoint and firstInstall webserver
-      //display->clearDisplay();
+      display->clearDisplay();
       webServer->stopWebServer();
       network->closeAccessPoint(); 
     }  
     if (displayWifiAnimation == true) {
-      //display->clearDisplay();
+      display->clearDisplay();
       ota->setup(debug);
       debug->debug(network->getIpAddress());
       ota->onProgress([&, this](unsigned int progress, unsigned int total){
@@ -93,7 +93,16 @@ void Domain::loop() {
     }
     ota->loop();
     time->loop();
-    //display->displayHour(time->getHour(), time->getMinutes());
+
+    /*for (int i = 0; i < 13; i++) {
+      display->displayHour(i, time->getMinutes());  
+      delay(2000);
+    }*/
+    int hour = time->getHour()+1;
+    if (hour == 24) {
+      hour = 0;
+    }
+    display->displayHour(time->getHour()+1, time->getMinutes());
   }
 }
 
@@ -121,12 +130,12 @@ void Domain::handleSaveConfiguration () {
   String pass = webServer->getBodyField("password");
   storage->write(SSIDSTORAGE, ssid);
   storage->write(PASSSTORAGE, pass);
-  //display->displayConfigurationMode(false);
+  display->displayConfigurationMode(false);
   displayWifiAnimation = true;
   webServer->serve(200, "text/html", "<html><body>ok</body></html>");
   webServer->stopWebServer();
   network->closeAccessPoint();
-  //display->clearDisplay();
+  display->clearDisplay();
   counter = millis() / 1000;
   counter += 60;  
   network->connect(ssid, pass);
@@ -172,7 +181,7 @@ void Domain::handleSoftReset () {
 void Domain::handleOtaProgress (unsigned int progress, unsigned int total) {
   double progressP = (float) progress / (float) total;
   int progressPercent = progressP * 100;
-  //display->displayOtaProgress(progressPercent);
+  display->displayOtaProgress(progressPercent);
 }
 
 void Domain::setBoardInterface (BoardInterface *bI) {
