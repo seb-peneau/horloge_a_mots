@@ -1,6 +1,7 @@
 #include "domain.h"
 
 int count = 0;
+bool showDisplay = true;
 
 void Domain::setup() {
   debug->debug("Domain::setup");
@@ -16,8 +17,8 @@ void Domain::setup() {
   // reset was triggered by user input on reset button
   // remove configuration
   if (board->isUserTriggeredReset()) {
-    storage->write(SSIDSTORAGE, "");
-    storage->write(PASSSTORAGE, "");
+    //storage->write(SSIDSTORAGE, "");
+    //storage->write(PASSSTORAGE, "");
   }
   
   String ssid = storage->read(SSIDSTORAGE);
@@ -64,8 +65,6 @@ void Domain::loop() {
       int seconds = (millis() / 1000);
       int remaining = counter - seconds;
       float fr = ((remaining * 100) / 60) ;
-      int progress = fr;
-      //display->displayWifiProgress(progress);
       if (remaining < 0) {
         storage->write(SSIDSTORAGE, "");
         storage->write(PASSSTORAGE, "");
@@ -77,7 +76,7 @@ void Domain::loop() {
   } else { // Network is up and running
     if (network->isApCreated()) { // close AccessPoint and firstInstall webserver
       display->clearDisplay();
-      webServer->stopWebServer();
+      webServer->stopWebServer();    
       network->closeAccessPoint(); 
     }  
     if (displayWifiAnimation == true) {
@@ -89,20 +88,32 @@ void Domain::loop() {
           return handleOtaProgress(progress, total);
       });
       time->start();
+      webServer->startWebServer(80);
+      webServer->on("/api/display/off", "POST", [&, this](){
+        debug->debug("Domain::on POST /api/display/off");
+        return handleApiDisplay(false);
+      });   
+      webServer->on("/api/display/on", "POST", [&, this](){
+        debug->debug("Domain::on POST /api/display/off");
+        return handleApiDisplay(true);
+      });        
       displayWifiAnimation = false;
     }
+     
     ota->loop();
     time->loop();
 
-    /*for (int i = 0; i < 13; i++) {
-      display->displayHour(i, time->getMinutes());  
-      delay(2000);
-    }*/
     int hour = time->getHour()+1;
     if (hour == 24) {
       hour = 0;
     }
-    display->displayHour(time->getHour()+1, time->getMinutes());
+    if (showDisplay) {
+      display->displayHour(time->getHour()+1, time->getMinutes());
+    } else {
+      display->clearDisplay();
+      delay(100);
+      display->clearDisplay();
+    }
   }
 }
 
@@ -141,6 +152,11 @@ void Domain::handleSaveConfiguration () {
   network->connect(ssid, pass);
 }
 
+void Domain::handleApiDisplay(bool display) {
+  showDisplay = display;
+  webServer->serve(200, "text/html", "<html><body>ok</body></html>");
+}
+
 /**
  * handleConfiguration : Manage in app configuration for TAMTAM
  * 
@@ -155,7 +171,7 @@ void Domain::handleConfiguration () {
   webServer->on("/reset", "GET", [&, this](){
     debug->debug("Domain::on GET /reset");
     return handleSoftReset ();
-  });  
+  });
 }
 
 

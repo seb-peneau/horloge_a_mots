@@ -1,5 +1,7 @@
 #include "horlogeDisplay.h"
 
+int brightness = 2; // full 1
+
 HorlogeDisplay::HorlogeDisplay() {
 
 }
@@ -7,12 +9,13 @@ HorlogeDisplay::HorlogeDisplay() {
 void HorlogeDisplay::setup(DebugInterface *debug) {
   displayDebug = debug;
   strip = new NeoPixelBus<NeoRgbwFeature, NeoWs2812xMethod>(PixelCount, PixelPin);
-  RgbColor red = RgbColor(0, 255, 0);
+  RgbColor red = RgbColor(0, 255/brightness, 0);
   HslColor hslRed = HslColor(red);
-  RgbColor green = RgbColor(255, 0, 0);
+  RgbColor green = RgbColor(255/brightness, 0, 0);
   HslColor hslGreen = HslColor(green);
   strip->Begin();
   strip->Show();
+  
   strip->SetPixelColor(65,hslRed); //red
   strip->SetPixelColor(64,hslRed);
   strip->SetPixelColor(63,hslRed);
@@ -25,7 +28,7 @@ void HorlogeDisplay::loop () {
 
 void HorlogeDisplay::displayConfigurationMode(bool show) {
   if (show) {
-    RgbColor orange = RgbColor(200, 255, 0);
+    RgbColor orange = RgbColor(200, 255/brightness, 0);
     HslColor hslOrange = HslColor(orange);
     strip->SetPixelColor(62,hslOrange);
     strip->SetPixelColor(63,hslOrange);
@@ -38,13 +41,18 @@ void HorlogeDisplay::displayConfigurationMode(bool show) {
 void HorlogeDisplay::clearDisplay() {
   strip->Begin();
   strip->Show();
+  RgbColor black = RgbColor(0,0,0);
+  HslColor hslBlack = HslColor(black);
+  for (int i=0; i <= 65; i++) {
+    strip->SetPixelColor(i, hslBlack);
+  }
 }
 
 void HorlogeDisplay::displayWifiStatus(bool displayWifiStatus) {
   if (!displayWifiStatus) {
-    RgbColor red = RgbColor(0, 255, 0);
+    RgbColor red = RgbColor(0, 255/brightness, 0);
     HslColor hslRed = HslColor(red);
-    RgbColor green = RgbColor(255, 0, 0);
+    RgbColor green = RgbColor(255/brightness, 0, 0);
     HslColor hslGreen = HslColor(green);
     if (repeat < 100) {
       strip->SetPixelColor(63,hslGreen);
@@ -93,9 +101,9 @@ int lastMinute = 0;
 
 void HorlogeDisplay::displayH(int hour) {
   displayDebug->debug("HorlogeDisplay::displayHour::"+String(hour));
-  RgbColor white = RgbColor(255);
+  RgbColor white = RgbColor(255/brightness);
   HslColor hslWhite = HslColor(white);
-  RgbColor green = RgbColor(255,0,0);
+  RgbColor green = RgbColor(255/brightness,0,0);
   HslColor hslGreen = HslColor(green);
   strip->SetPixelColor(0,hslWhite); // IL
   strip->SetPixelColor(1,hslWhite); // EST
@@ -116,8 +124,10 @@ void HorlogeDisplay::displayH(int hour) {
 }
 
 void HorlogeDisplay::displayM(int minute, int remaining) {
-  RgbColor white = RgbColor(255);
+  RgbColor white = RgbColor(255/brightness);
   HslColor hslWhite = HslColor(white);
+  RgbColor orange = RgbColor(200/brightness,255/brightness,0);
+  HslColor hslGreen = HslColor(orange);
   if (remaining == 0) {
     strip->SetPixelColor(53,hslWhite); // pile
     strip->SetPixelColor(54,hslWhite); // pile
@@ -130,12 +140,12 @@ void HorlogeDisplay::displayM(int minute, int remaining) {
     strip->SetPixelColor(60,hslWhite); // et des bananes
     strip->SetPixelColor(61,hslWhite); // et des bananes
     for (int i = 1; i <= remaining; i++) {
-      strip->SetPixelColor(61+i,hslWhite);
+      strip->SetPixelColor(61+i,hslGreen);
     }
   }
   for (int i=0; i < 8; i++) {
     if (minutes[(minute/5) - 1][i] > 0) {
-      strip->SetPixelColor(minutes[(minute/5) - 1][i],hslWhite);
+      strip->SetPixelColor(minutes[(minute/5) - 1][i],hslGreen);
     }
   }
 }
@@ -163,9 +173,9 @@ void HorlogeDisplay::displayHour(int hour, int minute) {
 
 void HorlogeDisplay::displayOtaProgress(int progress) {
   clearDisplay();
-  RgbColor blue = RgbColor(0,0,255);
+  RgbColor blue = RgbColor(0,0,255/brightness);
   HslColor hslBlue = HslColor(blue);
-  RgbColor green = RgbColor(255,0,0);
+  RgbColor green = RgbColor(255/brightness,0,0);
   HslColor hslGreen = HslColor(green);
   if (progress > 0) { strip->SetPixelColor(62,hslBlue); }
   if (progress > 25) { strip->SetPixelColor(63,hslBlue); }

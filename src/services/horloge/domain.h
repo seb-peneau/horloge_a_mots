@@ -35,6 +35,7 @@ class Domain {
     void handleSaveConfiguration ();
     void handleConfiguration ();
     void handleConfigurationRequest ();
+    void handleApiDisplay(bool display);
     void handleSoftReset ();
     void handleOtaProgress (unsigned int progress, unsigned int total);
     void handleWebsocketEvent(uint8_t *payload, size_t size);
