@@ -16,6 +16,17 @@ void HorlogeDisplay::setup(DebugInterface *debug) {
   strip->Begin();
   strip->Show();
   
+  RgbColor black = RgbColor(0,0,0);
+  HslColor hslBlack = HslColor(black);
+
+  strip->SetPixelColor(0,hslGreen);
+  for (int i=1; i <= 65; i++) {
+    delay(200);
+    strip->SetPixelColor(i-1,hslBlack);
+    strip->SetPixelColor(i,hslGreen);
+    strip->Show();
+  }
+
   strip->SetPixelColor(65,hslRed); //red
   strip->SetPixelColor(64,hslRed);
   strip->SetPixelColor(63,hslRed);
